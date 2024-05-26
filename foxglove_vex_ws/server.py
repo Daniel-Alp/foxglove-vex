@@ -9,10 +9,11 @@ from serial_util import read
 
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
-        ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=1)
+        ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=0.01)
+
+        topic_dict = {}
 
         while True:
-            await asyncio.sleep(0.01)
             timestamp = time.time_ns()
 
             data = await read(ser)
@@ -20,7 +21,26 @@ async def main():
                 continue
 
             json = orjson.loads(data[5:])
-            print(orjson.dumps(json, option=orjson.OPT_INDENT_2).decode("utf-8"))
+
+            # need to handle these keys not existing
+            topic = json["topic"]
+            payload = json["payload"]
+
+            if topic not in topic_dict:
+                chan_id = await server.add_channel(
+                    {
+                        "topic": topic,
+                        "encoding": "json",
+                        "schemaName": topic,
+                        "schema": orjson.dumps(build_shema(payload)).decode("utf-8"),
+                        "schemaEncoding": "jsonschema"
+                    }
+                )
+                topic_dict[topic] = chan_id
+            else:
+                chan_id = topic_dict[topic]
+
+            await server.send_message(chan_id, timestamp, orjson.dumps(payload))
 
 if __name__ == "__main__":
     run_cancellable(main())      
