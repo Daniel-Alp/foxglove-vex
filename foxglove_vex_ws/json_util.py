@@ -1,6 +1,4 @@
-import orjson
-
-def build_shema(json):
+def build_shema(json) -> dict:
     json_type = type(json)
     if json_type is dict:
         schema = {}
@@ -20,11 +18,4 @@ def build_shema(json):
         return {"type": "boolean"}
 
 if __name__ == "__main__":
-    example = "{\"message\": \"hello, world!\",\"nested object\": {\"x\": 123,\"y\": 4.56}, \"indicator\": true}"
-    json = orjson.loads(example) 
-    schema = build_shema(json)
-
-    print()
-    print(orjson.dumps(json, option=orjson.OPT_INDENT_2).decode("utf-8"))
-    print()
-    print(orjson.dumps(schema, option=orjson.OPT_INDENT_2).decode("utf-8"))
+    pass

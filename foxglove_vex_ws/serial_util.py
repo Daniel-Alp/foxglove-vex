@@ -1,13 +1,17 @@
+import asyncio
 import serial
 from cobs import cobs
 
 def find_vex_port():
     pass 
 
-def read(ser: serial.Serial) -> str:
+async def pyserial_read_byte_wrapper(ser: serial.Serial):
+    return ser.read(1)
+
+async def read(ser: serial.Serial) -> str:
     raw_data = bytearray()
     while True:
-        next = ser.read(1)
+        next = await pyserial_read_byte_wrapper(ser)
         if next == b'\0':
             break
         else:
@@ -15,7 +19,4 @@ def read(ser: serial.Serial) -> str:
     return cobs.decode(raw_data).decode("utf-8")[4:]
 
 if __name__ == "__main__":
-    ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=1)
-
-    while True:
-        print(read(ser))
+    pass
