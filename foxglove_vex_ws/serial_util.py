@@ -5,7 +5,7 @@ from cobs import cobs
 class VexSerial:
     def __init__(self):
         # In the future, needs to automatically find the port that the device is connected to
-        self.ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=0.01)
+        self.ser = serial.Serial("/dev/ttyACM1", baudrate=115200, timeout=0.01)
 
     async def read_packet(self) -> str:
         raw_data = bytearray()

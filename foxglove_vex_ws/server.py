@@ -27,6 +27,11 @@ async def main():
             except orjson.JSONDecodeError:
                 continue
 
+            if "topic" not in json or "payload" not in json:
+                example = '{"topic": <string>, "payload": <JSON object>}'
+                logger.error(f"Message does not follow format: {example}")
+                continue
+
             topic = json["topic"]
             payload = json["payload"]
 
