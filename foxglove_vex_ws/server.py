@@ -1,5 +1,5 @@
-import asyncio
 import time
+import logging
 import orjson
 import serial
 from foxglove_websocket import run_cancellable
@@ -9,20 +9,24 @@ from serial_util import read
 
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
+        logger = logging.getLogger("FoxgloveServer")
         ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=0.01)
-
         topic_dict = {}
 
         while True:
             timestamp = time.time_ns()
 
-            data = await read(ser)
+            try: 
+                data = await read(ser)
+            except serial.serialutil.SerialException:
+                logger.error("Device disconnected")
+                break
+
             if data[:5].upper() != "DATA:":
                 continue
 
             json = orjson.loads(data[5:])
 
-            # need to handle these keys not existing
             topic = json["topic"]
             payload = json["payload"]
 
@@ -43,4 +47,4 @@ async def main():
             await server.send_message(chan_id, timestamp, orjson.dumps(payload))
 
 if __name__ == "__main__":
-    run_cancellable(main())      
+    run_cancellable(main())
