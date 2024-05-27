@@ -10,7 +10,7 @@ from serial_util import read
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
         logger = logging.getLogger("FoxgloveServer")
-        ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=0.01)
+        ser = serial.Serial('/dev/ttyACM1', baudrate=115200, timeout=0.01) # In the future, needs to automatically find the port that the device is connected to
         topic_dict = {}
 
         while True:
@@ -22,10 +22,10 @@ async def main():
                 logger.error("Device disconnected")
                 break
 
-            if data[:5].upper() != "DATA:":
+            try:
+                json = orjson.loads(data)
+            except orjson.JSONDecodeError:
                 continue
-
-            json = orjson.loads(data[5:])
 
             topic = json["topic"]
             payload = json["payload"]
