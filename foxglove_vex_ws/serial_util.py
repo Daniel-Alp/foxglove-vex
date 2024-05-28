@@ -1,11 +1,15 @@
 import asyncio
 import serial
+import serial.tools.list_ports
 from cobs import cobs
 
 class VexSerial:
     def __init__(self):
-        # In the future, needs to automatically find the port that the device is connected to
-        self.ser = serial.Serial("/dev/ttyACM1", baudrate=115200, timeout=0.01)
+        ports = serial.tools.list_ports.comports()
+        for port in ports:
+            if "VEX Robotics User Port" in port.description:
+                break
+        self.ser = serial.Serial(port.device, baudrate=115200, timeout=0.01)
 
     async def read_packet(self) -> str:
         raw_data = bytearray()
@@ -19,4 +23,4 @@ class VexSerial:
         return cobs.decode(raw_data).decode("utf-8")[4:]
 
 if __name__ == "__main__":
-    pass
+    ser = VexSerial()
