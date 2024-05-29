@@ -23,4 +23,4 @@ class VexSerial:
         return cobs.decode(raw_data).decode("utf-8")[4:]
 
 if __name__ == "__main__":
-    ser = VexSerial()
+    pass

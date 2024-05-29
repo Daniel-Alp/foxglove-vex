@@ -7,7 +7,7 @@ def build_shema(json) -> dict:
         for key in json:
             schema["properties"][key] = build_shema(json[key])
         return schema
-
+    
     elif json_type is str:
         return {"type": "string"}   
     
