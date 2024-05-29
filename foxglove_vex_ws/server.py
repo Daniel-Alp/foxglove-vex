@@ -4,13 +4,20 @@ import orjson
 import serial
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer
+import serial.serialutil
 from json_util import build_shema
 from serial_util import VexSerial
 
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
         logger = logging.getLogger("FoxgloveServer")
-        ser = VexSerial()
+
+        try:
+            ser = VexSerial()
+        except serial.serialutil.SerialException:
+            logger.error("User port not found")
+            return
+
         topic_dict = {}
 
         while True:
