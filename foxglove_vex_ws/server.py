@@ -11,6 +11,7 @@ from serial_util import VexSerial
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
         logger = logging.getLogger("FoxgloveServer")
+        example_message = '{"topic": <string>, "payload": <JSON object>}'
 
         try:
             ser = VexSerial()
@@ -35,11 +36,15 @@ async def main():
                 continue
 
             if "topic" not in json or "payload" not in json:
-                example = '{"topic": <string>, "payload": <JSON object>}'
-                logger.error(f"Message does not follow format: {example}")
+                logger.error(f"Message does not follow format: {example_message}")
                 continue
 
             topic = json["topic"]
+            if type(topic) is not str:
+                logger.error(f"Message does not follow format: {example_message}")
+                continue
+            topic.replace(" ", "_")
+
             payload = json["payload"]
 
             if topic not in topic_dict:
