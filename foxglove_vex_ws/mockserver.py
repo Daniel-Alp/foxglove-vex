@@ -31,19 +31,20 @@ async def main():
         # Simulate the robot moving in a circle
         x = 0
         y = 0
-        heading_deg = 0
+        theta = 0
+        i = 0
 
         while True:
             timestamp = time.time_ns()
-            heading_deg = (heading_deg + 1) % 360
-            heading_rad = heading_deg * math.pi / 180;
-            x += math.cos(math.pi * 0.5 - heading_rad);
-            y += math.sin(math.pi * 0.5 - heading_rad);
+            x += math.cos(i * math.pi / 180);
+            y += math.sin(i * math.pi / 180);
+            theta = (360 - i) * math.pi / 180;
+            i = (i + 1) % 360
 
             payload = {
                 "x": x,
                 "y": y,
-                "theta": heading_rad
+                "theta": theta
             }
 
             await server.send_message(chan_id, timestamp, orjson.dumps(payload))
