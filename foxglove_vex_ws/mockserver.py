@@ -64,7 +64,7 @@ async def main():
 
             await server.send_message(chan_id_1, timestamp, orjson.dumps(payload_1))
             await server.send_message(chan_id_2, timestamp, orjson.dumps(payload_2))
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.01)
 
 if __name__ == "__main__":
     run_cancellable(main())
