@@ -40,14 +40,14 @@ async def main():
         # Simulate the robot moving in a circle
         x = 0
         y = 0
-        theta = 0
         i = 0
+        theta = 0
 
         while True:
             timestamp = time.time_ns()
-            x += math.cos(i * math.pi / 180);
-            y += math.sin(i * math.pi / 180);
-            theta = (360 - i) * math.pi / 180;
+            x = 24 * math.cos(i * math.pi / 180)
+            y = 24 * math.sin(i * math.pi / 180)
+            theta = ((360 - i) % 360) * math.pi / 180
             i = (i + 1) % 360
 
             payload_1 = {
