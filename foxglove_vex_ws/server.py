@@ -8,8 +8,6 @@ import serial.serialutil
 from json_util import build_shema
 from serial_util import VexSerial
 
-
-
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
         logger = logging.getLogger("FoxgloveServer")
