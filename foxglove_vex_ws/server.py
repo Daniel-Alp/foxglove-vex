@@ -7,6 +7,7 @@ from foxglove_websocket.server import FoxgloveServer
 import serial.serialutil
 from json_util import build_shema
 from serial_util import VexSerial
+import asyncio
 
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
@@ -32,6 +33,8 @@ async def main():
             return
 
         topic_dict = {}
+
+        await asyncio.sleep(2)
 
         while True:
             timestamp = time.time_ns()

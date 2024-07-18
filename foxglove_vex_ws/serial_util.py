@@ -1,34 +1,26 @@
+from pros.serial.devices.vex.v5_user_device import V5UserDevice
+from pros.serial.ports.v5_wireless_port import V5WirelessPort
+from pros.serial import decode_bytes_to_str
+from pros.cli.common import resolve_v5_port
+
 import asyncio
-import serial
-import serial.tools.list_ports
-from cobs import cobs
 
 class VexSerial:
     def __init__(self):
-        ports = serial.tools.list_ports.comports()
+        port, _ = resolve_v5_port(None, 'user')
+        ser = V5WirelessPort(port)
 
-        found_port = False
-
-        for port in ports:
-            if "VEX Robotics User Port" in port.description:
-                found_port = True
-                break
-
-        if not found_port:
-            raise serial.serialutil.SerialException
-
-        self.ser = serial.Serial(port.device, baudrate=115200, timeout=0.01)
+        self.device = V5UserDevice(ser)
+        self.device.subscribe(b'sout')
+        self.device.subscribe(b'serr')
 
     async def read_packet(self) -> str:
-        raw_data = bytearray()
-        while True:
-            next = self.ser.read(1)
-            if next == b'\0':
-                break
-            else:
-                raw_data.extend(next)
-            await asyncio.sleep(0)
-        return cobs.decode(raw_data).decode("utf-8")[4:]
+        await asyncio.sleep(0)
+        data = self.device.read()
+        if not data:
+            return ""
+        return decode_bytes_to_str(data[1])
+        
 
 if __name__ == "__main__":
     pass
