@@ -21,7 +21,7 @@ async def main():
                 "properties": {
                     "x": {"type": "number"},
                     "y": {"type": "number"},
-                    "theta": {"type": "number"}
+                    "theta": {"type": "number"} 
                 }
             }
         ).decode("utf-8")
