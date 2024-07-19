@@ -14,18 +14,6 @@ async def main():
         logger = logging.getLogger("FoxgloveServer")
         example_message = '{"topic": <string>, "payload": <JSON object>}'
 
-        # Schema used for VEX 2D Panel messages
-        odom_schema_string = orjson.dumps(
-            {
-                "type": "object",
-                "properties": {
-                    "x": {"type": "number"},
-                    "y": {"type": "number"},
-                    "theta": {"type": "number"} 
-                }
-            }
-        ).decode("utf-8")
-
         try:
             ser = VexSerial()
         except serial.serialutil.SerialException:
@@ -65,10 +53,6 @@ async def main():
             if topic not in topic_dict:
                 schema_str = orjson.dumps(build_shema(payload)).decode("utf-8")
                 schema_name = topic
-
-                # Don't know the name of the schema unless it matches the odometry schema
-                if schema_str == odom_schema_string:
-                    schema_name = "odometry"
 
                 chan_id = await server.add_channel(
                     {

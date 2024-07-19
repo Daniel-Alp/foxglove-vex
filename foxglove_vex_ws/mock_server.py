@@ -48,7 +48,7 @@ async def main():
             x = 24 * math.cos(i * math.pi / 180)
             y = 24 * math.sin(i * math.pi / 180)
             theta = ((360 - i) % 360) * math.pi / 180
-            i = (i + 1) % 360
+            i = i + 1
 
             payload_1 = {
                 "x": x,
