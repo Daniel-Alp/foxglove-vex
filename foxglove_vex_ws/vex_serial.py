@@ -4,6 +4,8 @@ import serial
 import serial.tools
 import serial.tools.list_ports
 
+import time
+
 class BaseConnection(object, metaclass=ABCMeta):
     def __init__(self, ser: serial.Serial):
         self.ser = ser
@@ -44,6 +46,12 @@ if __name__ == "__main__":
                         stopbits=serial.STOPBITS_ONE,
                         timeout=1)
     
+    transfer_channel_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x10, 0x02, 0x01, 0x01, 0xa9, 0x48])
+
+    ser.write(transfer_channel_request)
+    time.sleep(1)
+    response = ser.read_all()
+
     read_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x27, 0x02, 0x01, 0x00, 0xc4, 0xad])
         
     while True:
