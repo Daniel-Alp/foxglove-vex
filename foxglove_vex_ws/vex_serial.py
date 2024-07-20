@@ -13,9 +13,7 @@ class BaseConnection(object, metaclass=ABCMeta):
     def read(self) -> bytes:
         raise NotImplementedError
 
-# Connected to brain
 class DirectConnection(BaseConnection):
-    # For direct connection read from User Port
     def read(self) -> bytes:
         data = bytearray()
         while True:
@@ -29,6 +27,11 @@ def create_connection() -> BaseConnection:
     # TODO instead of specifying port find it automatically
     pass
 
+
+class WirelessConnection(BaseConnection):
+    def read(self) -> bytes:                       
+        return bytes()
+
 if __name__ == "__main__":
     ports = serial.tools.list_ports.comports()
     for port in ports:
@@ -41,18 +44,24 @@ if __name__ == "__main__":
                         stopbits=serial.STOPBITS_ONE,
                         timeout=1)
     
-    # command to request to read from stdio (hardcoded because I only need this command)
-    # 
-    # 0xc9, 0x36, 0xb8, 0x47 header for device-bound message
-    # 0x56                   command ID
-    # 0x27                   extended command ID
-    # 0x02                   payload size
-    # 0x01                   channel 
-    # 0x00                   write length (0x56 0x27 is also used as a write command)
-    # 0xc4, 0xad             CRC-16-CCITT checksum
-    read_command = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x27, 0x02, 0x01, 0x00, 0xc4, 0xad])
-
-    ser.write(read_command)
+    read_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x27, 0x02, 0x01, 0x00, 0xc4, 0xad])
+        
     while True:
-        next = ser.read()
-        print(next)
+        ser.write(read_request)
+
+        header = ser.read(2)
+        id = ser.read()
+
+        size = int.from_bytes(ser.read(), 'little') 
+        if size & 0x80 == 0x80:
+            size &= 0x7f
+            size <<= 7
+            size += int.from_bytes(ser.read(), 'little')
+    
+        payload = ser.read(size)
+
+        if size > 5:
+            print("header", header.hex())
+            print("id", id.hex())
+            print("payload", payload)
+            print("="*150)
