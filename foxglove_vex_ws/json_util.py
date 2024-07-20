@@ -1,20 +1,19 @@
-def build_shema(json) -> dict:
-    json_type = type(json)
-    if json_type is dict:
+def build_schema(json) -> dict:
+    if isinstance(json, dict):
         schema = {}
         schema["type"] = "object"
         schema["properties"] = {}
         for key in json:
-            schema["properties"][key] = build_shema(json[key])
+            schema["properties"][key] = build_schema(json[key])
         return schema
     
-    elif json_type is str:
+    elif isinstance(json, str):
         return {"type": "string"}   
     
-    elif json_type is float or json_type is int:
+    elif isinstance(json, float) or isinstance(json, int):
         return {"type": "number"}
     
-    elif json_type is bool:
+    elif isinstance(json, bool):
         return {"type": "boolean"}
 
 if __name__ == "__main__":

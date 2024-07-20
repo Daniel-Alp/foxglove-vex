@@ -5,9 +5,8 @@ import serial
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer
 import serial.serialutil
-from json_util import build_shema
+from json_util import build_schema
 from serial_util import VexSerial
-import asyncio
 
 async def main():
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
@@ -21,8 +20,6 @@ async def main():
             return
 
         topic_dict = {}
-
-        await asyncio.sleep(2)
 
         while True:
             timestamp = time.time_ns()
@@ -43,7 +40,7 @@ async def main():
                 continue
 
             topic = json["topic"]
-            if type(topic) is not str:
+            if not isinstance(topic, str):
                 logger.error(f"Message does not follow format: {example_message}")
                 continue
             topic.replace(" ", "_")
@@ -51,15 +48,12 @@ async def main():
             payload = json["payload"]
 
             if topic not in topic_dict:
-                schema_str = orjson.dumps(build_shema(payload)).decode("utf-8")
-                schema_name = topic
-
                 chan_id = await server.add_channel(
                     {
                         "topic": topic,
                         "encoding": "json",
-                        "schemaName": schema_name,
-                        "schema": schema_str,
+                        "schemaName": topic,
+                        "schema": orjson.dumps(build_schema(payload)).decode("utf-8"),
                         "schemaEncoding": "jsonschema"
                     }
                 )
