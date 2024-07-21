@@ -47,29 +47,54 @@ if __name__ == "__main__":
                         timeout=1)
     
     transfer_channel_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x10, 0x02, 0x01, 0x01, 0xa9, 0x48])
-
     ser.write(transfer_channel_request)
-    time.sleep(1)
+    time.sleep(2)
     response = ser.read_all()
+    print(response)
 
-    read_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x27, 0x02, 0x01, 0x00, 0xc4, 0xad])
+    all_data = bytearray()
+
+    read_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x27, 0x02, 0x01, 0x00, 0xc4, 0xad])        
+    try:
+        while True:
+            delimeter_index = all_data.find(0x00)
+            if delimeter_index != -1:
+                try:
+                    print(cobs.decode(all_data[:delimeter_index]).decode("utf-8"))
+                except cobs.DecodeError:
+                    print("failed to decode")
+                all_data = all_data[delimeter_index:]
+                all_data.pop(0)
+                continue
+
+            ser.write(read_request)
+
+            header = ser.read(2)
+
+            if header != bytes([0xaa, 0x55]):
+                ser.read_all()
+                continue
+
+            id = ser.read()
+
+            if id != bytes([0x56]):
+                ser.read_all()
+                continue
+
+            size = int.from_bytes(ser.read(), 'little') 
+            if size & 0x80 == 0x80:
+                size &= 0x7f
+                size <<= 7
+                size += int.from_bytes(ser.read(), 'little')
         
-    while True:
-        ser.write(read_request)
+            payload = ser.read(size)
 
-        header = ser.read(2)
-        id = ser.read()
+            extended_id = payload[0]
+            acknowledge = payload[1]
+            data = payload[3:-2]
 
-        size = int.from_bytes(ser.read(), 'little') 
-        if size & 0x80 == 0x80:
-            size &= 0x7f
-            size <<= 7
-            size += int.from_bytes(ser.read(), 'little')
-    
-        payload = ser.read(size)
+            all_data.extend(data)
 
-        if size > 5:
-            print("header", header.hex())
-            print("id", id.hex())
-            print("payload", payload)
-            print("="*150)
+    except KeyboardInterrupt:
+        time.sleep(1)
+        ser.read_all()
