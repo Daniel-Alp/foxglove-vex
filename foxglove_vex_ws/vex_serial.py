@@ -54,43 +54,37 @@ class WirelessConnection(BaseConnection):
                 else:
                     data.append(next)
 
-            ser.write(read_request)
+            self.ser.write(read_request)
 
-            metadata = ser.read(3) # Header bytes and ID byte
+            metadata = self.ser.read(3) # Header bytes and ID byte
             if metadata != bytes([0xaa, 0x55, 0x56]):
-                ser.read_all()
+                self.ser.read_all()
                 continue
 
-            size = int.from_bytes(ser.read(), 'little') 
+            size = int.from_bytes(self.ser.read(), 'little') 
             if size & 0x80 == 0x80:
                 size &= 0x7f
                 size <<= 7
-                size += int.from_bytes(ser.read(), 'little')
+                size += int.from_bytes(self.ser.read(), 'little')
         
-            payload = ser.read(size) # Extended ID byte, acknowledge byte, channel byte, new data bytes, checksum bytes
+            payload = self.ser.read(size) # Extended ID byte, acknowledge byte, channel byte, new data bytes, checksum bytes
             if payload[0] != 0x27 or payload[1] != 0x76:
-                ser.read_all()
+                self.ser.read_all()
                 continue
 
             self.all_data.extend(payload[3:-2])
 
 def create_connection() -> BaseConnection:
-    # TODO instead of specifying port find it automatically
-    pass
+   pass
 
 if __name__ == "__main__":
-    ports = serial.tools.list_ports.comports()
-    for port in ports:
-        print(port)
-
-    ser = serial.Serial(port="/dev/ttyACM0",
+    ser = serial.Serial("/dev/ttyACM0",
                         baudrate=115200,
                         bytesize=serial.EIGHTBITS,
                         parity=serial.PARITY_NONE,
                         stopbits=serial.STOPBITS_ONE,
-                        timeout=1)
-    
-    connection = WirelessConnection(ser)
+                        timeout=1)    
 
+    connection = WirelessConnection(ser)
     while True:
         print(connection.read().decode("utf-8"))
