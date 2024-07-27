@@ -36,7 +36,7 @@ async def main():
             if ("topic" not in json or 
                 "payload" not in json or 
                 type(json["topic"]) is not str):
-                logger.error("Incorret message format.")
+                logger.error("Incorrect message format (https://foxglove-vex-docs.vercel.app/connecting-to-data).")
                 continue
 
             topic = json["topic"]
