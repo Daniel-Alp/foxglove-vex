@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from collections import deque
 from cobs import cobs
 import time
+import asyncio
 import serial
 import serial.tools
 import serial.tools.list_ports
@@ -12,17 +13,18 @@ class BaseConnection(object, metaclass=ABCMeta):
 
     # Read until delimiter \x00 and return bytes
     @abstractmethod
-    def read(self) -> bytes:
+    async def read(self) -> bytes:
         raise NotImplementedError
 
 class DirectConnection(BaseConnection):
-    def read(self) -> bytes:
+    async def read(self) -> bytes:
         data = bytearray()
         while True:
             next = self.ser.read()
             if next == b'\x00':
                 break
             data.extend(next)
+            await asyncio.sleep(0)
         try:
             return cobs.decode(data)[4:]        
         except cobs.DecodeError:
@@ -39,7 +41,7 @@ class WirelessConnection(BaseConnection):
 
         self.all_data = deque()
 
-    def read(self) -> bytes:
+    async def read(self) -> bytes:
         data = bytearray()
         read_request = bytes([0xc9, 0x36, 0xb8, 0x47, 0x56, 0x27, 0x02, 0x01, 0x00, 0xc4, 0xad])
         while True:
@@ -56,17 +58,21 @@ class WirelessConnection(BaseConnection):
             self.ser.write(read_request)
 
             metadata = self.ser.read(3) # Header bytes and ID byte
+            await asyncio.sleep(0)
             if metadata != bytes([0xaa, 0x55, 0x56]):
                 self.ser.read_all()
                 continue
 
             size = int.from_bytes(self.ser.read(), 'little') # Size sent in either 2 or 1 bytes
+            await asyncio.sleep(0)
             if size & 0x80 == 0x80:
                 size &= 0x7f
                 size <<= 7
                 size += int.from_bytes(self.ser.read(), 'little')
+                await asyncio.sleep(0)
         
             payload = self.ser.read(size) # Extended ID byte, acknowledge byte, channel byte, new data bytes, checksum bytes
+            await asyncio.sleep(0)
             if payload[0] != 0x27 or payload[1] != 0x76:
                 self.ser.read_all()
                 continue
@@ -105,9 +111,4 @@ def create_connection() -> BaseConnection:
         return WirelessConnection(ser)
 
 if __name__ == "__main__":
-    try:
-        connection = create_connection()
-        while True:
-            print(connection.read().decode("utf-8"))
-    except serial.SerialException:
-        print("Failed to connect. Zero or multiple devices connected.")
+    pass
