@@ -2,5 +2,4 @@ cobs==1.2.1
 foxglove-websocket==0.1.2
 orjson==3.10.3
 pyserial==3.5
-simplepyble==0.7.3
 websockets==12.0
