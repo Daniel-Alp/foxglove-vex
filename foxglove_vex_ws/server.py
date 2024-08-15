@@ -29,7 +29,7 @@ async def main():
                 break
 
             if data == b"foxglove\n":
-                server.session_id(str(timestamp))
+                await server.reset_session_id(str(timestamp))
                 continue
         
             try:
