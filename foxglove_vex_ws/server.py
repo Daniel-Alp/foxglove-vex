@@ -13,9 +13,37 @@ import serial.serialutil
 
 logger = logging.getLogger("FoxgloveServer")
 
-async def main(ser: BaseConnection, writer: Writer):
+def invalid_json(json: Any) -> bool:
+    return ("topic" not in json or 
+            "payload" not in json or 
+            type(json["topic"]) is not str)
+
+def add_mcap_channel(writer: Writer, topic: str, schema_bytes: bytes, mcap_channel_ids: dict[str, int]):
+    schema_id = writer.register_schema(
+        name=topic,
+        encoding="jsonschema",
+        data=schema_bytes
+    )
+    mcap_channel_ids[topic] = writer.register_channel(
+        schema_id=schema_id,
+        topic=topic,
+        message_encoding="json"
+    )
+
+async def add_ws_channel(server: FoxgloveServer, topic: str, schema_bytes: bytes, ws_channel_ids: dict[str, int]):
+    ws_channel_ids[topic] = await server.add_channel(
+        {
+            "topic": topic,
+            "encoding": "json",
+            "schemaName": topic,
+            "schema": schema_bytes.decode("utf-8"),
+            "schemaEncoding": "jsonschema"
+        }
+    )
+
+async def live_connection(ser: BaseConnection, writer: Writer):
     async with FoxgloveServer("0.0.0.0", 8765, "foxglove-vex-bridge") as server:
-        # map topic to channel id
+        # Map topic to channel ID
         ws_channel_ids = {}
         mcap_channel_ids = {}
 
@@ -23,71 +51,44 @@ async def main(ser: BaseConnection, writer: Writer):
             timestamp = time.time_ns()
 
             try: 
-                data = await ser.read()
+                message = await ser.read()
             except serial.serialutil.SerialException:
                 logger.error("Device disconnected.")
                 break
 
-            if data == b"foxglove\n": # flag sent by robot to indicate new session
-                # TODO create a new recording for each session
+            if message == b"foxglove\n": # Flag to indicate new session
                 await server.reset_session_id(str(timestamp))
                 continue
         
             try:
-                json = orjson.loads(data)
+                json = orjson.loads(message)
             except orjson.JSONDecodeError:
                 continue
-
-            print(data)
             
-            if ("topic" not in json or 
-                "payload" not in json or 
-                type(json["topic"]) is not str):
+            if invalid_json(json):
                 logger.error("Incorrect message format (https://foxglove-vex-docs.vercel.app/connecting-to-data).")
                 continue
 
             topic = json["topic"]
             payload = json["payload"]
 
+            payload_bytes = orjson.dumps(payload)
+
             if topic not in ws_channel_ids:
-                schema = orjson.dumps(build_schema(payload))
-
-                schema_id = writer.register_schema(
-                    name=topic,
-                    encoding="jsonschema",
-                    data=schema
-                )
-                mcap_channel_id = writer.register_channel(
-                    schema_id=schema_id,
-                    topic=topic,
-                    message_encoding="json"
-                )
-                mcap_channel_ids[topic] = mcap_channel_id
-
-                ws_channel_id = await server.add_channel(
-                    {
-                        "topic": topic,
-                        "encoding": "json",
-                        "schemaName": topic,
-                        "schema": schema.decode("utf-8"),
-                        "schemaEncoding": "jsonschema"
-                    }
-                )
-                ws_channel_ids[topic] = ws_channel_id
-            else:
-                ws_channel_id = ws_channel_ids[topic]
+                schema_bytes = orjson.dumps(build_schema(payload))
+                add_mcap_channel(writer, topic, schema_bytes, mcap_channel_ids)
+                await add_ws_channel(server, topic, schema_bytes, ws_channel_ids)                     
 
             writer.add_message(
-                channel_id=mcap_channel_id,
+                channel_id=mcap_channel_ids[topic],
                 log_time=timestamp,
-                data=orjson.dumps(payload),
+                data=payload_bytes,
                 publish_time=timestamp
             )
-
             await server.send_message(
-                ws_channel_id, 
+                ws_channel_ids[topic], 
                 timestamp, 
-                orjson.dumps(payload)
+                payload_bytes
             )
 def run():
     try:
@@ -100,7 +101,8 @@ def run():
     writer.start()
 
     loop = asyncio.get_event_loop()
-    task = loop.create_task(main(ser, writer))
+    task = loop.create_task(live_connection(ser, writer))
+    
     try:
         loop.add_signal_handler(signal.SIGINT, task.cancel)
     except NotImplementedError:
