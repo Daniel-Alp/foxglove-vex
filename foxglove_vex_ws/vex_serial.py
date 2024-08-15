@@ -73,7 +73,7 @@ class WirelessConnection(BaseConnection):
         
             payload = self.ser.read(size) # Extended ID byte, acknowledge byte, channel byte, new data bytes, checksum bytes
             await asyncio.sleep(0)
-            if payload[0] != 0x27 or payload[1] != 0x76:
+            if len(payload) < 2 or payload[0] != 0x27 or payload[1] != 0x76:
                 self.ser.read_all()
                 continue
 

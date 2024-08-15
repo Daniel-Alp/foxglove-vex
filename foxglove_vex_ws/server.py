@@ -28,6 +28,10 @@ async def main():
                 logger.error("Device disconnected.")
                 break
 
+            if data == b"foxglove\n":
+                server.session_id(str(timestamp))
+                continue
+        
             try:
                 json = orjson.loads(data)
             except orjson.JSONDecodeError:
