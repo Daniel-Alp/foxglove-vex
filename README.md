@@ -1,7 +1,5 @@
 # Foxglove-VEX bridge
-Since a VEX robot cannot directly communicate with Foxglove, I created this repo to serve as a go-between tool, receiving messages from your robot and forwarding them to Foxglove. 
-
-To learn how to set up the connection and send messages, **[read the docs](https://foxglove-vex-docs.vercel.app/connecting-to-data)**!
+Middleware for VEX robots and Foxglove. To learn how to set up the connection and send messages, **[read the docs](https://foxglove-vex-docs.vercel.app/connecting-to-data)**!
 
 # Repo overview
 * ```server.py``` core of the program, script for opening a Websocket connection with Foxglove, and then acting as the bridge between your robot and Foxglove.
