@@ -1,11 +1,13 @@
-# Send mock messages to test 2D VEX extension if no VEX brain on hand
+# Send mock messages to test 2D VEX panel if no VEX brain/controller on hand
 
 import asyncio
+import math
 import time
+
 import orjson
 from foxglove_websocket import run_cancellable
 from foxglove_websocket.server import FoxgloveServer
-import math
+
 
 async def main():
     schema = {

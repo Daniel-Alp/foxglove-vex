@@ -1,15 +1,16 @@
-from foxglove_websocket.server import FoxgloveServer
-from mcap.writer import Writer
-from json_schema import build_schema
-from vex_serial import create_connection, BaseConnection
-import time
 import asyncio
-import signal
-from typing import Any, Coroutine
-from datetime import datetime
 import logging
+import signal
+import time
+from datetime import datetime
+from typing import Any
+
 import orjson
 import serial.serialutil
+from foxglove_websocket.server import FoxgloveServer
+from json_schema import build_schema
+from mcap.writer import Writer
+from vex_serial import BaseConnection, create_connection
 
 logger = logging.getLogger("FoxgloveServer")
 

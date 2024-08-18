@@ -1,11 +1,13 @@
+import asyncio
+import time
 from abc import ABCMeta, abstractmethod
 from collections import deque
-from cobs import cobs
-import time
-import asyncio
+
 import serial
 import serial.tools
 import serial.tools.list_ports
+from cobs import cobs
+
 
 class BaseConnection(object, metaclass=ABCMeta):
     def __init__(self, ser: serial.Serial):
